@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View , StyleSheet } from 'react-native';
+import { View , StyleSheet, Alert } from 'react-native';
 import { Container, Content, Form, Item, Label, Input, Text, Button,  } from "native-base";
 import firebase from 'react-native-firebase';
 class Signup extends Component {
@@ -9,6 +9,7 @@ class Signup extends Component {
         this.state = {
             user: null,
             name: '',
+            email: '',
             phone: '+91',
             password: '',
             message: '',
@@ -16,25 +17,89 @@ class Signup extends Component {
             loading: false,
             confirmResult: null,
             codeInput: '',
+            checkUserFlag: false,
         };
+        
     }
-    
+
     singUpFn = () => {
-        const { phone, password } = this.state;
+        const { phone, } = this.state;
         this.setState({ error: '', loading: true, message: 'Sending code ...' });
         firebase.auth().signInWithPhoneNumber(phone)
         .then(confirmResult => this.setState({ confirmResult, message: 'Code has been sent!' }))
         .catch(error => this.setState({ message: `Sign In With Phone Number Error: ${error.message}` }));
     }
-    confirmCode() {
+    confirmCode = () => {
         const { codeInput, confirmResult } = this.state;
         if (confirmResult && codeInput.length) {
             confirmResult.confirm(codeInput)
             .then((user) => {
-            this.setState({ message: 'Code Confirmed!' });
+                this.setState({ message: 'Code Confirmed!' });
+                this.nxtSignUp();
             })
             .catch(error => this.setState({ message: `Code Confirm Error: ${error.message}` }));
         }
+    }
+    nxtSignUp = () =>{
+        const { 
+            name, 
+            email,
+            phone,
+            password
+        } = this.state;
+        console.log(firebase.auth());
+        firebase.database().ref('users/'+this.state.phone+'/').set({ 
+            name: name, 
+            email: email,
+            phone: phone,
+            password: password
+        }).then(function() {
+            console.log('Synchronization succeeded');
+        })
+        .catch(function(error) {
+            console.log('Synchronization failed', error);
+        });
+    }
+    checkUser = () => {
+        const { 
+            email,
+            phone,
+            // checkUserFlag
+        } = this.state;
+        var checkUserFlag = this.state.checkUserFlag;
+        firebase.database().ref('users/').once('value', function(snapshot) {
+            list = snapshot._value;
+            for (key in snapshot._value) {
+                if (snapshot._value.hasOwnProperty(key)) {
+                    console.log(snapshot._value[key]);
+                    if(snapshot._value[key].phone === phone || snapshot._value[key].email === email){
+                        console.log(snapshot._value[key].phone);
+                        checkUserFlag = true;
+                    }
+                }
+            }
+        }).then(() => {
+            if(checkUserFlag){
+                console.log('if', checkUserFlag)
+                Alert.alert(
+                    'Alert Title',
+                    'My Alert Msg',
+                    [
+                    //   {text: 'Ask me later', onPress: () => console.log('Ask me later pressed')},
+                    //   {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+                      {text: 'OK', onPress: () => console.log('OK Pressed')},
+                    ],
+                    { cancelable: true }
+                )
+            }else{
+                console.log('else', checkUserFlag)
+                this.singUpFn();
+            }
+        }).catch((error)=> {
+            console.log(error)
+        });
+        
+        
     }
     signOut = () => {
         firebase.auth().signOut();
@@ -44,7 +109,7 @@ class Signup extends Component {
             buttonContainer, inlineButton
         } = styles;
         const {
-            name, phone, password, 
+            name, email, phone, password, 
         } = this.state;
         return(
             <Content>
@@ -54,6 +119,13 @@ class Signup extends Component {
                         <Input 
                         onChangeText={value => this.setState({ name: value })}
                         value={name}
+                        />
+                    </Item>
+                    <Item floatingLabel>
+                        <Label>Email</Label>
+                        <Input 
+                        onChangeText={value => this.setState({ email: value })}
+                        value={email}
                         />
                     </Item>
                     <Item floatingLabel>
@@ -74,7 +146,7 @@ class Signup extends Component {
                 </Form>
                 <View style={buttonContainer}>
                     <Button full
-                    onPress={this.singUpFn} 
+                    onPress={this.checkUser} 
                     >
                         <Text>
                             Register
@@ -83,9 +155,11 @@ class Signup extends Component {
                 </View>
                 <View style={buttonContainer}>
                     <View style={inlineButton}>
-                        <Button>
+                        <Button
+                        onPress={this.checkUser}
+                        >
                             <Text>
-                                Register
+                                test                                
                             </Text>
                         </Button>
                     </View>
@@ -110,15 +184,17 @@ class Signup extends Component {
         );
     }
     renderVerificationCodeInput() {
-        const { codeInput } = this.state;
+        // const { codeInput } = this.state;
         return (
             <Content>
                 <Form>
                     <Item floatingLabel>
                         <Label>Code</Label>
                         <Input 
-                        onChangeText={value => this.setState({ codeInput: value })}
-                        value={codeInput}
+                        onChangeText={
+                            value => this.setState({ codeInput: value })
+                        }
+                        value={this.state.codeInput}
                         />
                     </Item>
                 </Form>

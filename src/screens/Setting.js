@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { View ,     StyleSheet } from 'react-native';
+import { View ,StyleSheet } from 'react-native';
 import {
-    Container, Containt, Button, Text,
+    Container, Content, Button, Text,
 } from 'native-base';
 import firebase from 'react-native-firebase';
 

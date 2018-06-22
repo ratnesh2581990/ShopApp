@@ -12,14 +12,18 @@ export default class Splash extends Component {
     }
     componentDidMount() {
         
-        firebase.initializeApp({
-            apiKey: "AIzaSyCOwq8BstEwdxJNxU3DWVcO5JbzElHqzNs",
-            authDomain: "shopapp-2e32b.firebaseapp.com",
-            databaseURL: "https://shopapp-2e32b.firebaseio.com",
-            projectId: "shopapp-2e32b",
-            storageBucket: "shopapp-2e32b.appspot.com",
-            messagingSenderId: "828370830639"
-        });
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp({
+                apiKey: "AIzaSyCOwq8BstEwdxJNxU3DWVcO5JbzElHqzNs",
+                authDomain: "shopapp-2e32b.firebaseapp.com",
+                databaseURL: "https://shopapp-2e32b.firebaseio.com",
+                projectId: "shopapp-2e32b",
+                storageBucket: "shopapp-2e32b.appspot.com",
+                messagingSenderId: "828370830639"
+            });
+        }
+
         this.authSubscription = firebase.auth().onAuthStateChanged((user) => {
             this.setState({
                 loading: false,
@@ -44,6 +48,8 @@ export default class Splash extends Component {
             </View>
         );
     }
+    
+    
 }
 export { Splash };
 const styles = StyleSheet.create({
