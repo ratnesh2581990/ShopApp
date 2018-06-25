@@ -68,10 +68,9 @@ class Signup extends Component {
         } = this.state;
         var checkUserFlag = this.state.checkUserFlag;
         firebase.database().ref('users/').once('value', function(snapshot) {
-            list = snapshot._value;
             for (key in snapshot._value) {
                 if (snapshot._value.hasOwnProperty(key)) {
-                    console.log(snapshot._value[key]);
+                    // console.log(snapshot._value[key]);
                     if(snapshot._value[key].phone === phone || snapshot._value[key].email === email){
                         console.log(snapshot._value[key].phone);
                         checkUserFlag = true;

@@ -1,32 +1,99 @@
 import React, { Component } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, AsyncStorage } from 'react-native';
 import { Container, Content, Form, Item, Label, Input, Text, Button,  } from "native-base";
+import firebase from 'react-native-firebase';
 class Login extends Component {
+    constructor(props){
+        super(props);
+        this.state = {
+            phone : "+91",
+            password: "",
+            loggedIn: false,
+            loading: false,
+        }
+    }
+    LoginFn = () =>{
+        this.setState({loading: true});
+        const userRef = firebase.database().ref('users/');
+        const {
+            phone,
+            password,
+            loading,
+        } = this.state
+        var loginSuccess=  false;
+        var user = null;
+        userRef.once('value', (snapshot)=>{
+            for (key in snapshot._value) {
+                if (snapshot._value.hasOwnProperty(key)) {
+                    if(snapshot._value[key].phone === phone && snapshot._value[key].password === password){
+                        // console.log(snapshot._value[key].phone);
+                        loginSuccess = true;
+                        user = snapshot._value[key];
+                    }
+                }
+            }
+        }).then(() =>{
+            this.setState({loggedIn: loginSuccess});
+            this.saveToStorage(user);
+            console.log("logged in");
+        })
+    }
+    async saveToStorage(userData){
+		if (userData) {
+			AsyncStorage.setItem('user', JSON.stringify(userData), (err)=> {
+			if(err){
+				console.log("an error");
+				throw err;
+			}
+			console.log("success", userData);
+			}).catch((err)=> {
+				console.log("error is: " + err);
+			});
+			return true;
+		}
+		return false;
+	}
     render() {
+        const {
+            phone,
+            password,
+            loading
+        } = this.state;
         return(
             <Container>
                 <Content>
                     <Form>
                         <Item floatingLabel>
                             <Label>Phone No.</Label>
-                            <Input />
+                            <Input
+                            onChangeText={value => this.setState({phone: value})}
+                            value={phone}
+                            />
                         </Item>
                         <Item floatingLabel >
                             <Label>Password</Label>
-                            <Input secureTextEntry={true} />
+                            <Input 
+                            secureTextEntry={true} 
+                            onChangeText={value => this.setState({password: value})}
+                            value={password}
+                            />
                         </Item>
                     </Form>
                     <View style={styles.buttonContainer}>
-                        <Button full>
+                        <Button full
+                        onPress={() =>{ this.LoginFn() }}
+                        >
                             <Text>
                                 Login
                             </Text>
                         </Button>
                     </View>
                     <View style={styles.buttonContainer}>
-                        <Button full transparent>
+                        <Button 
+                        full transparent
+                        >
                             <Text>
-                                Login
+                                test
                             </Text>
                         </Button>
                     </View>

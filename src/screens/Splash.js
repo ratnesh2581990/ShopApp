@@ -1,18 +1,16 @@
 import React, { Component } from 'react';
-import { View , Text, StyleSheet } from 'react-native';
+import { View , Text, StyleSheet, AsyncStorage, YellowBox } from 'react-native';
 import firebase from 'react-native-firebase';
-import { YellowBox } from 'react-native';
 YellowBox.ignoreWarnings(['Warning: isMounted(...) is deprecated', 'Module RCTImageLoader']);
 export default class Splash extends Component {
     constructor() {
         super();
         this.state = {
             loading: true,
+            loggedIn: false
         };
     }
     componentDidMount() {
-        
-        
         if (!firebase.apps.length) {
             firebase.initializeApp({
                 apiKey: "AIzaSyCOwq8BstEwdxJNxU3DWVcO5JbzElHqzNs",
@@ -24,21 +22,49 @@ export default class Splash extends Component {
             });
         }
 
-        this.authSubscription = firebase.auth().onAuthStateChanged((user) => {
+
+
+        this.getToken();
+
+        // this.authSubscription = firebase.auth().onAuthStateChanged((user) => {
+        //     this.setState({
+        //         loading: false,
+        //         user,
+        //     });
+        // });
+        // console.log(firebase);
+    }
+    async getToken() {
+        console.log('token start ');
+		try {		  
+            // console.log('async test');
+            // console.log(AsyncStorage.getItem('user'));
+            const user = await AsyncStorage.getItem('user');
+            console.log("user",user);
             this.setState({
                 loading: false,
-                user,
+                loggedIn: user == null ? false : true,
             });
-        });
-        console.log(firebase);
+            // if(!userPhone) {
+            //     console.log(userPhone+'condition 1');
+            //     TempLogin();
+            // } else {
+            //     this.setState({userPhone: userPhone});
+            //     console.log(userPhone+'condition 2');
+            //     this.props.navigation.navigate('Routers')
+            // }
+		} catch(error) {
+			console.log(userPhone+'condition 3');
+			console.log("Something went wrong", error);
+        }
     }
     componentWillUnmount() {
-        this.authSubscription();
+        // this.authSubscription();
     }
 
     render() {
         if (!this.state.loading){
-            this.state.user ? this.props.navigation.navigate("AppDrawer") : this.props.navigation.navigate("LoginReg");
+            this.state.loggedIn ? this.props.navigation.navigate("AppDrawer") : this.props.navigation.navigate("LoginReg");
         }
         return(
             <View style={styles.container}>
